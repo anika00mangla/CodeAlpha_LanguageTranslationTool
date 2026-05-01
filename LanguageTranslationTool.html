@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Translate — Lingua</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #fdf6ec;
+      --ink:   #1a1a2e;
+      --pink:  #ff6b9d;
+      --yel:   #ffd93d;
+      --grn:   #6bcb77;
+      --blue:  #4d96ff;
+      --purp:  #c77dff;
+      --ora:   #ff9f1c;
+      --r:     16px;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 32px 16px 80px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* ── Decorative blobs ── */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(255,107,157,0.18) 0%, transparent 70%);
+      top: -200px; right: -200px;
+    }
+    body::after {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(77,150,255,0.15) 0%, transparent 70%);
+      bottom: -200px; left: -200px;
+    }
+
+    .page { max-width: 960px; margin: 0 auto; position: relative; z-index: 1; }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+    .badge {
+      background: var(--ink);
+      color: var(--yel);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 50px;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(48px, 8vw, 88px);
+      font-weight: 900;
+      line-height: 0.95;
+      letter-spacing: -2px;
+      color: var(--ink);
+      position: relative;
+    }
+    h1 span.hi { color: var(--pink); }
+    h1 span.mid { color: var(--blue); }
+    .tagline {
+      font-size: 15px;
+      color: #888;
+      margin-top: 14px;
+      font-weight: 300;
+    }
+
+    /* ── Floating colour pills ── */
+    .pills {
+      display: flex;
+      gap: 8px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .pill {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: 50px;
+      border: 2px solid var(--ink);
+      background: transparent;
+    }
+    .pill.p { background: var(--pink); }
+    .pill.y { background: var(--yel); }
+    .pill.g { background: var(--grn); }
+    .pill.b { background: var(--blue); color: #fff; }
+    .pill.v { background: var(--purp); }
+    .pill.o { background: var(--ora); }
+
+    /* ── Main container ── */
+    .main {
+      background: white;
+      border: 2.5px solid var(--ink);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 8px 8px 0 var(--ink);
+    }
+
+    /* ── Language bar ── */
+    .lang-bar {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      border-bottom: 2.5px solid var(--ink);
+    }
+    .lang-half {
+      flex: 1;
+      padding: 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .lang-half:first-child {
+      border-right: 2.5px solid var(--ink);
+      background: var(--pink);
+    }
+    .lang-half:last-child {
+      background: var(--blue);
+    }
+    .lang-half label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+    .lang-half:last-child label { color: #fff; }
+    select {
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      appearance: none;
+      width: 100%;
+    }
+    .lang-half:last-child select { color: #fff; }
+    select option { background: white; color: var(--ink); }
+
+    .swap-wrap {
+      padding: 12px;
+      background: var(--yel);
+      border-left: 2.5px solid var(--ink);
+      border-right: 2.5px solid var(--ink);
+    }
+    .swap-btn {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      border: 2.5px solid var(--ink);
+      background: white;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: transform 0.3s cubic-bezier(.34,1.56,.64,1), background 0.2s;
+    }
+    .swap-btn:hover { background: var(--grn); transform: rotate(180deg); }
+    .swap-btn svg { width: 18px; height: 18px; }
+
+    /* ── Panels ── */
+    .panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    @media (max-width: 600px) {
+      .panels { grid-template-columns: 1fr; }
+      .panel-in { border-right: none !important; border-bottom: 2.5px solid var(--ink); }
+      .lang-bar { flex-wrap: wrap; }
+      .swap-wrap { border: none; border-top: 2.5px solid var(--ink); border-bottom: 2.5px solid var(--ink); }
+    }
+
+    .panel-in, .panel-out {
+      padding: 28px;
+      min-height: 260px;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-in {
+      border-right: 2.5px solid var(--ink);
+      background: #fffdf8;
+    }
+    .panel-out { background: white; }
+
+    .plabel {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .panel-in .plabel { color: var(--pink); }
+    .panel-out .plabel { color: var(--blue); }
+
+    textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 17px;
+      font-weight: 400;
+      line-height: 1.75;
+      color: var(--ink);
+      resize: none;
+      min-height: 180px;
+      width: 100%;
+    }
+    textarea::placeholder { color: #bbb; font-style: italic; }
+
+    .out-text {
+      flex: 1;
+      font-size: 17px;
+      font-weight: 400;
+      line-height: 1.75;
+      color: var(--ink);
+      min-height: 180px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .out-ph { color: #bbb; font-style: italic; }
+
+    .cc { font-size: 11px; color: #bbb; text-align: right; margin-top: 8px; font-weight: 500; }
+    .cc.over { color: #ff4444; }
+
+    /* ── Bottom bar ── */
+    .bottom-bar {
+      border-top: 2.5px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 16px 24px;
+      background: var(--cream);
+    }
+
+    .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 16px;
+      border-radius: 50px;
+      border: 2px solid var(--ink);
+      background: white;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      color: var(--ink);
+    }
+    .btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 3px 3px 0 var(--ink); }
+    .btn:active { transform: translateY(0); box-shadow: none; }
+    .btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn.clr:hover { background: #ffe0e0; }
+    .btn.cpy:hover { background: var(--grn); }
+    .btn.sps:hover { background: var(--yel); }
+    .btn.spt:hover { background: var(--purp); color: white; }
+    .btn.spt:hover svg { stroke: white; }
+
+    /* ── Translate button ── */
+    .translate-row {
+      display: flex;
+      justify-content: center;
+      padding: 24px;
+      border-top: 2.5px solid var(--ink);
+      background: var(--yel);
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .btn-translate {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 48px;
+      border-radius: 50px;
+      border: 2.5px solid var(--ink);
+      background: var(--ink);
+      color: var(--yel);
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(.34,1.56,.64,1);
+      letter-spacing: -0.3px;
+      box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+    }
+    .btn-translate:hover {
+      background: var(--pink);
+      color: var(--ink);
+      transform: translateY(-3px);
+      box-shadow: 6px 6px 0 var(--ink);
+    }
+    .btn-translate:hover svg { stroke: var(--ink); }
+    .btn-translate:active { transform: translateY(0); box-shadow: 2px 2px 0 var(--ink); }
+    .btn-translate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-translate svg { width: 20px; height: 20px; stroke: var(--yel); }
+
+    #status {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      min-height: 18px;
+      letter-spacing: 0.5px;
+    }
+    #status.err { color: #ff4444; }
+    #status.ok { color: #1a8c3e; }
+    #status.loading { color: #888; }
+
+    /* spinner */
+    .spin {
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(253,246,236,0.3);
+      border-top-color: var(--yel);
+      border-radius: 50%;
+      animation: rot 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes rot { to { transform: rotate(360deg); } }
+
+    /* toast */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--ink);
+      color: var(--yel);
+      padding: 10px 28px;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 700;
+      opacity: 0;
+      transition: all 0.25s cubic-bezier(.34,1.56,.64,1);
+      pointer-events: none;
+      z-index: 999;
+      border: 2px solid var(--yel);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* footer */
+    footer {
+      text-align: center;
+      margin-top: 28px;
+      font-size: 12px;
+      color: #aaa;
+    }
+    footer a { color: var(--pink); font-weight: 600; text-decoration: none; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="badge">✦ Free · No API key needed ✦</div>
+    <h1><span class="hi">Lin</span><span class="mid">gua</span></h1>
+    <p class="tagline">Break language barriers — instantly</p>
+    <div class="pills">
+      <span class="pill p">Hindi</span>
+      <span class="pill y">Japanese</span>
+      <span class="pill g">Spanish</span>
+      <span class="pill b">Arabic</span>
+      <span class="pill v">French</span>
+      <span class="pill o">+35 more</span>
+    </div>
+  </header>
+
+  <div class="main">
+
+    <!-- Language selector bar -->
+    <div class="lang-bar">
+      <div class="lang-half">
+        <label for="srcL">Translate from</label>
+        <select id="srcL"></select>
+      </div>
+      <div class="swap-wrap">
+        <button class="swap-btn" id="swpBtn" title="Swap languages">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round">
+            <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>
+          </svg>
+        </button>
+      </div>
+      <div class="lang-half">
+        <label for="tgtL">Into</label>
+        <select id="tgtL"></select>
+      </div>
+    </div>
+
+    <!-- Text panels -->
+    <div class="panels">
+      <div class="panel-in">
+        <div class="plabel">Your text</div>
+        <textarea id="inp" placeholder="Type something here… (Ctrl+Enter to translate)" maxlength="500" spellcheck="true"></textarea>
+        <div class="cc"><span id="cc">0</span> / 500</div>
+      </div>
+      <div class="panel-out">
+        <div class="plabel">Translation</div>
+        <div class="out-text" id="out"><span class="out-ph">Your translation will appear here…</span></div>
+      </div>
+    </div>
+
+    <!-- Translate action -->
+    <div class="translate-row">
+      <button class="btn-translate" id="tBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round">
+          <path d="M5 8l6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/>
+        </svg>
+        <span id="btxt">Translate</span>
+        <div class="spin" id="sp"></div>
+      </button>
+      <div id="status"></div>
+    </div>
+
+    <!-- Bottom action bar -->
+    <div class="bottom-bar">
+      <div class="btn-group">
+        <button class="btn clr" id="clrBtn" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          Clear
+        </button>
+        <button class="btn sps" id="ssBtn" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          Speak Source
+        </button>
+      </div>
+      <div class="btn-group">
+        <button class="btn cpy" id="cpyBtn" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy
+        </button>
+        <button class="btn spt" id="stBtn" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+          Speak Translation
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    Powered by <a href="https://mymemory.translated.net/" target="_blank">MyMemory API</a> · Lingua · Free forever
+  </footer>
+
+</div>
+
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+  const LANGS = [
+    {c:'auto',n:'🔍 Auto Detect'},{c:'en',n:'🇬🇧 English'},{c:'hi',n:'🇮🇳 Hindi'},
+    {c:'fr',n:'🇫🇷 French'},{c:'de',n:'🇩🇪 German'},{c:'es',n:'🇪🇸 Spanish'},
+    {c:'it',n:'🇮🇹 Italian'},{c:'pt',n:'🇵🇹 Portuguese'},{c:'ru',n:'🇷🇺 Russian'},
+    {c:'ja',n:'🇯🇵 Japanese'},{c:'ko',n:'🇰🇷 Korean'},{c:'zh-CN',n:'🇨🇳 Chinese (Simplified)'},
+    {c:'ar',n:'🇸🇦 Arabic'},{c:'bn',n:'🇧🇩 Bengali'},{c:'ur',n:'🇵🇰 Urdu'},
+    {c:'pa',n:'🇮🇳 Punjabi'},{c:'gu',n:'🇮🇳 Gujarati'},{c:'mr',n:'🇮🇳 Marathi'},
+    {c:'ta',n:'🇮🇳 Tamil'},{c:'te',n:'🇮🇳 Telugu'},{c:'ml',n:'🇮🇳 Malayalam'},
+    {c:'kn',n:'🇮🇳 Kannada'},{c:'nl',n:'🇳🇱 Dutch'},{c:'sv',n:'🇸🇪 Swedish'},
+    {c:'pl',n:'🇵🇱 Polish'},{c:'tr',n:'🇹🇷 Turkish'},{c:'el',n:'🇬🇷 Greek'},
+    {c:'uk',n:'🇺🇦 Ukrainian'},{c:'he',n:'🇮🇱 Hebrew'},{c:'fa',n:'🇮🇷 Persian'},
+    {c:'th',n:'🇹🇭 Thai'},{c:'vi',n:'🇻🇳 Vietnamese'},{c:'id',n:'🇮🇩 Indonesian'},
+    {c:'ms',n:'🇲🇾 Malay'},{c:'sw',n:'🇰🇪 Swahili'},{c:'af',n:'🇿🇦 Afrikaans'},
+  ];
+
+  const srcL=document.getElementById('srcL'), tgtL=document.getElementById('tgtL'),
+        inp=document.getElementById('inp'), out=document.getElementById('out'),
+        tBtn=document.getElementById('tBtn'), btxt=document.getElementById('btxt'),
+        sp=document.getElementById('sp'), ccEl=document.getElementById('cc'),
+        stat=document.getElementById('status'), clrBtn=document.getElementById('clrBtn'),
+        cpyBtn=document.getElementById('cpyBtn'), ssBtn=document.getElementById('ssBtn'),
+        stBtn=document.getElementById('stBtn'), swpBtn=document.getElementById('swpBtn'),
+        toast=document.getElementById('toast');
+  let last='';
+
+  // Populate dropdowns
+  LANGS.forEach(l=>{
+    const mk=(el,skip)=>{if(skip&&l.c==='auto')return;const o=document.createElement('option');o.value=l.c;o.textContent=l.n;el.appendChild(o);};
+    mk(srcL,false); mk(tgtL,true);
+  });
+  srcL.value='auto'; tgtL.value='hi';
+
+  // Char counter
+  inp.addEventListener('input',()=>{
+    const n=inp.value.length;
+    ccEl.textContent=n;
+    ccEl.parentElement.className='cc'+(n>=500?' over':'');
+    clrBtn.disabled=n===0; ssBtn.disabled=n===0;
+  });
+
+  // Swap
+  swpBtn.addEventListener('click',()=>{
+    const s=srcL.value==='auto'?'en':srcL.value, t=tgtL.value;
+    srcL.value=t; tgtL.value=s;
+    if(last){inp.value=last;inp.dispatchEvent(new Event('input'));}
+  });
+
+  // Clear
+  clrBtn.addEventListener('click',()=>{
+    inp.value=''; inp.dispatchEvent(new Event('input'));
+    out.innerHTML='<span class="out-ph">Your translation will appear here…</span>';
+    last=''; cpyBtn.disabled=true; stBtn.disabled=true; setStat('');
+  });
+
+  // Translate
+  tBtn.addEventListener('click', doTranslate);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey))doTranslate();});
+
+  async function doTranslate(){
+    const txt=inp.value.trim();
+    if(!txt){setStat('Please type something first!','err');return;}
+    const srcCode=srcL.value, tgtCode=tgtL.value;
+    const srcName=LANGS.find(l=>l.c===srcCode)?.n.replace(/^.+? /,'')||srcCode;
+    const tgtName=LANGS.find(l=>l.c===tgtCode)?.n.replace(/^.+? /,'')||tgtCode;
+    const fromLabel=srcCode==='auto'?'the detected language':srcName;
+    const prompt=`Translate the following text from ${fromLabel} to ${tgtName}.\nOutput ONLY the translated text, nothing else. No explanations, no notes. Preserve line breaks, tone, and style exactly.\n\n${txt}`;
+    setLoad(true); setStat('Translating…','loading');
+    try{
+      const r=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+      });
+      if(!r.ok)throw new Error('API error '+r.status);
+      const d=await r.json();
+      last=d.content?.[0]?.text?.trim()||'';
+      if(!last)throw new Error('Empty response');
+      out.textContent=last;
+      cpyBtn.disabled=false; stBtn.disabled=false;
+      setStat('✓ Done!','ok');
+    }catch(e){setStat('Error: '+e.message,'err');}
+    finally{setLoad(false);}
+  }
+
+  // Copy
+  cpyBtn.addEventListener('click',()=>{
+    if(!last)return;
+    navigator.clipboard.writeText(last).then(()=>showToast('Copied to clipboard!')).catch(()=>{
+      const t=document.createElement('textarea');t.value=last;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);showToast('Copied!');
+    });
+  });
+
+  // TTS
+  function speak(txt,lang){
+    if(!window.speechSynthesis){setStat('TTS not supported','err');return;}
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(txt);u.lang=lang==='auto'?'en':lang;u.rate=0.95;
+    window.speechSynthesis.speak(u);
+  }
+  ssBtn.addEventListener('click',()=>speak(inp.value.trim(),srcL.value));
+  stBtn.addEventListener('click',()=>speak(last,tgtL.value));
+
+  function setLoad(on){tBtn.disabled=on;sp.style.display=on?'block':'none';btxt.textContent=on?'Translating…':'Translate';}
+  function setStat(m,t=''){stat.textContent=m;stat.className=t;}
+  function showToast(m){toast.textContent=m;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2200);}
+</script>
+</body>
+</html>
